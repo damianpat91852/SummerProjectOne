@@ -41,18 +41,18 @@ class Circle {
     //TODO: NEXT STEP CASES LOGIC
     //some bug in the left corner
     //Cases: hits off top, hits of left, hits off right, hits of paddle (random), hits of object (random), goes through bottom it is out
-    update() {
+    update(hit) {
         //hits paddle
         if (this.y >= 700 - this.radius && this.x <= mouse.x + 40 && this.x >= mouse.x - 40) {
-            this.dy = this.dy * Math.random() + 1; 
-            this.dx = this.dx * Math.random() + 1;
+            this.dy = this.dy * Math.random() + 2; 
+            this.dx = this.dx * Math.random() + 2;
             this.dy = -1 * this.dy;
             //randomize towards which side the ball goes
             if (Math.random >= .5) {
                 this.dx = -1 * this.dx;
             }
-            this.x += this.dx * 3;
-            this.y += this.dy * 3;
+            this.x += this.dx * 7;
+            this.y += this.dy * 7;
             this.drawCircle();
         }
         //hits top of screen
@@ -60,18 +60,18 @@ class Circle {
             this.dy = -1 * this.dy;
             this.x += this.dx;
             this.y += this.dy;
-            this.drawCircle;
+            this.drawCircle();
         }
         //goes through bottom
         else if(this.y >= 800) {
             lives--;
             if (lives > 0) {
                 this.x = 100;
-                this.y = 100;
+                this.y = 400;
                 this.dx = 1;
                 this.dy = 1;
                 this.radius = 20
-                this.drawCircle;
+                this.drawCircle();
             }
             else {
                 endAnimation = true;
@@ -86,27 +86,75 @@ class Circle {
         }
         //right side of screen
         else if (this.x + this.radius >= 800) {
-            this.dy = this.dy * Math.random() + 1; 
-            this.dx = this.dx * Math.random() + 1;
+            this.dy = this.dy * Math.random() + 2; 
+            this.dx = this.dx * Math.random() + 2;
             this.dx = -1 * this.dx;
-            this.x += this.dx * 3;
-            this.y += this.dy * 3;
-            this.drawCircle;
+            this.x += this.dx * 7;
+            this.y += this.dy * 7;
+            this.drawCircle();
         }
         //left side of screen
         else if (this.x - this.radius <= 0) {
             this.dx = -1 * this.dx;
-            this.dy = this.dy * Math.random() + 1; 
-            this.dx = this.dx * Math.random() + 1;
-            this.x += this.dx * 3;
-            this.y += this.dy * 3;
-            this.drawCircle;
+            this.dy = this.dy * Math.random() + 2; 
+            this.dx = this.dx * Math.random() + 2;
+            this.x += this.dx * 7;
+            this.y += this.dy * 7;
+            this.drawCircle();
+        }
+        else if(hit) {
+            this.dy = -1 * this.dy;
+            this.dx = this.dx * Math.random() + 2;
+            this.x += this.dx;
+            this.y += this.dy;
+            this.drawCircle();
+            //console.log("hit");
+            hit = false;
         }
         //initialize ball begining of game and needed for when ball does not hit special case
         else {
+        //this.dy = this.dy * Math.random() + 2; 
+        //this.dx = this.dx * Math.random() + 2;
+        //console.log("else");
         this.x += this.dx;
         this.y += this.dy;
         this.drawCircle();
+        }
+    }
+}
+
+class block {
+    constructor(x,y,width,length) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.length = length;
+        this.active = true;
+    }
+
+    drawBlock() {
+        c.fillRect(this.x,this.y,this.width,this.length);
+    }
+
+    updateActivity(xCircle,yCircle,radius) {
+        if (yCircle - radius <= this.y + this.width) {
+            if (xCircle >= this.x && xCircle <= this.x + this.length) {
+                this.active = false;
+            }
+        } 
+    }
+
+    getActiveStatus() {
+        return this.active;
+    }
+
+}
+
+function buildBlocks() {
+    for (var j = 0; j < 6; j++) {
+        for (var i = 0; i < 9; i++) {
+            newBlock = new block(i * 88 + 8, 70 + j * 40,80,30);
+            blocks.push(newBlock);
         }
     }
 }
@@ -135,14 +183,29 @@ function animate() {
         c.fillRect(0,700,80,20);
     }
 
-    //builds the upper blocks
-    for (var j = 0; j < 6; j++) {
-        for (var i = 0; i < 9; i++) {
-            c.fillRect(i * 88 + 8,70 + j * 40,80,30);
+    var numBlocksInactiveThisRound = 0;
+    for (var i = 0; i < blocks.length; i++) {
+        blocks[i].updateActivity(myCircle.x,myCircle.y,myCircle.radius);
+        if(blocks[i].getActiveStatus()) {
+            blocks[i].drawBlock();
+        }
+        else {
+            numBlocksInactiveThisRound++;
         }
     }
 
-    myCircle.update();
+    if(numBlocksInactiveThisRound > numBlocksNotActive) {
+        hit = true;
+        numBlocksNotActive = numBlocksInactiveThisRound;
+    }
+
+    console.log(hit)
+    myCircle.update(hit);
+    hit = false;
+    //console.log(hit)
+    //console.log(hit);
+   
+
     if (endAnimation) {
             c.clearRect(0,0,800,800)
             gameOver();
@@ -153,8 +216,12 @@ function animate() {
     c.fillText(lives, 730, 50); 
 }
 
+var numBlocksNotActive = 0;
+var hit = false;
+var blocks = [];
 var beginGame = true;
 lives = 3;
 var endAnimation = false;
-myCircle = new Circle(100,320,1,1,20);
+myCircle = new Circle(100,400,2,2,20);
+buildBlocks();
 animate();
